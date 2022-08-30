@@ -1,6 +1,8 @@
 import os
 import json
+import requests as rq
 from twitchio.ext import commands
+from twitchio.ext import routines
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -58,6 +60,25 @@ class Bot(commands.Bot):
 		partial_user = self.create_user(streamer_id, streamer_name)
 		clip = await partial_user.create_clip(token = os.environ["TOKEN"])
 		await ctx.send(f"Clip crée et dispo ici : {clip['edit_url'].replace('/edit', '')}")
+
+
+@routines.routine(minutes=5)
+async def hello():
+	with open("data.json", "r") as f:
+			data = json.load(f)
+
+	response = rq.get(f"https://tmi.twitch.tv/group/user/{streamer_name}/chatters").json()
+	chatters = response["chatters"]["broadcaster"] + response["chatters"]["moderators"] + response["chatters"]["viewers"]
+	
+	for name in chatters:
+		if name in data.keys():
+			data[name]["points"] += 100
+    
+	with open("data.json", "w") as f:
+		json.dump(data, f)
+
+
+hello.start()
 
 bot = Bot()
 bot.run()
