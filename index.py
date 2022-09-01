@@ -33,7 +33,7 @@ class Bot(commands.Bot):
 		if chatter not in data.keys():
 			data[chatter] = { "points": 0, "total": 0 }
 
-		data[chatter]["points"]  += 10
+		data[chatter]["points"] += 10
 		data[chatter]["total"] += 10
 
 		with open("data.json", "w") as f:
@@ -78,11 +78,32 @@ class Bot(commands.Bot):
 			data = json.load(f)
 
 		if chatter in data.keys():
-			await ctx.send(f"{chatter} tu as actuellement {data[chatter]['points']} ♥ et amassé un total de {data[chatter]['total']} ♥")
+			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']} ♥ et amassé un total de {data[chatter]['total']} ♥")
+	
+	@commands.command()
+	async def give(self, ctx: commands.Context, chatter, amount):
+		with open("data.json", "r") as f:
+				data = json.load(f)
+		
+		if ctx.author.name == streamer_name:
+			if chatter in data.keys():
+				data[chatter]["points"] += int(amount)
+				data[chatter]["total"] += int(amount)	
+		else:
+			if chatter in data.keys():
+				data[chatter]["points"] -= int(amount)
+				if data[chatter]["points"] < 0:
+					data[chatter]["points"] = 0
+
+		await ctx.send(f"{chatter}, tu as {data[chatter]['points']} ♥")
+
+		with open("data.json", "w") as f:
+				json.dump(data, f)	
+
 
 bot = Bot()
 
-@routines.routine(seconds=20)
+@routines.routine(minutes=5)
 async def points():	
 	chatters = bot.get_chatters()
 	
