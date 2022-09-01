@@ -79,6 +79,25 @@ class Bot(commands.Bot):
 
 		if chatter in data.keys():
 			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']} ♥ et amassé un total de {data[chatter]['total']} ♥")
+
+	@commands.command(aliases = ["r"])
+	async def rank(self, ctx: commands.Context):
+		max_top_size = 10
+
+		with open("data.json", "r") as f:
+			data = json.load(f)
+
+		ordered_data = dict(sorted(data.items(), key = lambda item: item[1]["total"], reverse = True)[:max_top_size])
+		top_size = len(ordered_data)
+		top_text = f"Top {top_size} : "
+		
+		for i in range(top_size):
+			chatter = list(ordered_data)[i]
+			top_text += f"{i + 1}. {chatter} ({ordered_data[chatter]['total']} ♥)"
+			if i < top_size - 1:
+				top_text += ", "
+		
+		await ctx.send(top_text)
 	
 	@commands.command(aliases = ["g"])
 	async def give(self, ctx: commands.Context, chatter, amount):
