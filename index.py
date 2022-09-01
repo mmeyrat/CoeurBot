@@ -16,8 +16,7 @@ class Bot(commands.Bot):
 		super().__init__(token = os.environ["TOKEN"], prefix = "!", initial_channels = [streamer_name])
 
 	async def event_ready(self):
-		print(f"Logged in as {self.nick}")
-		print(f"User id is {self.user_id}")
+		print(f"Logged in as {self.nick} ({self.user_id})")
 
 	async def event_message(self, message):
 		# Messages with echo set to True are messages sent by the bot
@@ -61,9 +60,19 @@ class Bot(commands.Bot):
 		clip = await partial_user.create_clip(token = os.environ["TOKEN"])
 		await ctx.send(f"Clip crée et dispo ici : {clip['edit_url'].replace('/edit', '')}")
 
+	@commands.command()
+	async def money(self, ctx: commands.Context):
+		user = ctx.author.name
+
+		with open("data.json", "r") as f:
+			data = json.load(f)
+
+		if user in data.keys():
+			await ctx.send(f"{user} tu as actuellement {data[user]['points']} ♥")
+
 
 @routines.routine(minutes=5)
-async def hello():
+async def points():
 	with open("data.json", "r") as f:
 			data = json.load(f)
 
@@ -72,13 +81,13 @@ async def hello():
 	
 	for name in chatters:
 		if name in data.keys():
-			data[name]["points"] += 100
+			data[name]["points"] += 50
     
 	with open("data.json", "w") as f:
 		json.dump(data, f)
 
 
-hello.start()
+points.start()
 
 bot = Bot()
 bot.run()
