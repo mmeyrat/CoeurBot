@@ -52,26 +52,26 @@ class Bot(commands.Bot):
 
 		return message
 
-	@commands.command()
+	@commands.command(aliases = ["el"])
 	async def love(self, ctx: commands.Context):        
 		await ctx.send(self.emote_spam("<3 ", 100))
 
-	@commands.command()
+	@commands.command(aliases = ["ed"])
 	async def dance(self, ctx: commands.Context):
 		await ctx.send(self.emote_spam("Edance", 50))
 
-	@commands.command()
+	@commands.command(aliases = ["ep"])
 	async def pog(self, ctx: commands.Context):
 		await ctx.send(self.emote_spam("Epog", 50))
 
-	@commands.command()
+	@commands.command(aliases = ["c"])
 	async def clip(self, ctx: commands.Context):
 		partial_user = self.create_user(streamer_id, streamer_name)
 		clip = await partial_user.create_clip(token = os.environ["TOKEN"])
 		await ctx.send(f"Clip crée et dispo ici : {clip['edit_url'].replace('/edit', '')}")
 
-	@commands.command()
-	async def money(self, ctx: commands.Context):
+	@commands.command(aliases = ["b"])
+	async def balance(self, ctx: commands.Context):
 		chatter = ctx.author.name
 
 		with open("data.json", "r") as f:
@@ -80,7 +80,7 @@ class Bot(commands.Bot):
 		if chatter in data.keys():
 			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']} ♥ et amassé un total de {data[chatter]['total']} ♥")
 	
-	@commands.command()
+	@commands.command(aliases = ["g"])
 	async def give(self, ctx: commands.Context, chatter, amount):
 		with open("data.json", "r") as f:
 				data = json.load(f)
@@ -103,7 +103,7 @@ class Bot(commands.Bot):
 
 bot = Bot()
 
-@routines.routine(minutes=5)
+@routines.routine(minutes = 5)
 async def points():	
 	chatters = bot.get_chatters()
 	
