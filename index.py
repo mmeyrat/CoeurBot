@@ -37,7 +37,7 @@ class Bot(commands.Bot):
 		data[chatter]["total"] += 10
 
 		with open("data.json", "w") as f:
-			json.dump(data, f)
+			json.dump(data, f, indent = 4)
 
 		await self.handle_commands(message)
 
@@ -98,8 +98,7 @@ class Bot(commands.Bot):
 		await ctx.send(f"{chatter}, tu as {data[chatter]['points']} ♥")
 
 		with open("data.json", "w") as f:
-				json.dump(data, f)	
-
+				json.dump(data, f, indent = 4)	
 
 bot = Bot()
 
@@ -117,7 +116,7 @@ async def points():
 				data[chatter.name]["total"] += 50
 
 		with open("data.json", "w") as f:
-			json.dump(data, f)
+			json.dump(data, f, indent = 4)
 
 points.start()
 bot.run()
