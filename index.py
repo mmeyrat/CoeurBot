@@ -12,6 +12,8 @@ streamer_name = "aruten_"
 
 class Bot(commands.Bot):
 
+	chatters = None
+
 	def __init__(self):
 		super().__init__(token = os.environ["TOKEN"], prefix = "!", initial_channels = [streamer_name])
 
@@ -19,40 +21,48 @@ class Bot(commands.Bot):
 		print(f"Logged in as {self.nick} ({self.user_id})")
 
 	async def event_message(self, message):
-		# Messages with echo set to True are messages sent by the bot
 		if message.echo:
 			return
+
+		self.chatters = message.channel.chatters
+		chatter = message.author.name
 
 		with open("data.json", "r") as f:
 			data = json.load(f)
 
-		if message.author.name not in data.keys():
-			data[message.author.name] = { "points": 0 }
+		if chatter not in data.keys():
+			data[chatter] = { "points": 0, "total": 0 }
 
-		data[message.author.name]["points"] += 10
+		data[chatter]["points"]  += 10
+		data[chatter]["total"] += 10
 
 		with open("data.json", "w") as f:
 			json.dump(data, f)
 
 		await self.handle_commands(message)
 
-	def emoteSpam(self, text, count):
-		msg = ""
+	def get_chatters(self):
+		return self.chatters
+
+	def emote_spam(self, text, count):
+		message = ""
+
 		for i in range(count):
-			msg += text
-		return msg
+			message += text
+
+		return message
 
 	@commands.command()
 	async def love(self, ctx: commands.Context):        
-		await ctx.send(self.emoteSpam("<3 ", 100))
+		await ctx.send(self.emote_spam("<3 ", 100))
 
 	@commands.command()
 	async def dance(self, ctx: commands.Context):
-		await ctx.send(self.emoteSpam("Edance", 50))
+		await ctx.send(self.emote_spam("Edance", 50))
 
 	@commands.command()
 	async def pog(self, ctx: commands.Context):
-		await ctx.send(self.emoteSpam("Epog", 50))
+		await ctx.send(self.emote_spam("Epog", 50))
 
 	@commands.command()
 	async def clip(self, ctx: commands.Context):
@@ -62,32 +72,31 @@ class Bot(commands.Bot):
 
 	@commands.command()
 	async def money(self, ctx: commands.Context):
-		user = ctx.author.name
+		chatter = ctx.author.name
 
 		with open("data.json", "r") as f:
 			data = json.load(f)
 
-		if user in data.keys():
-			await ctx.send(f"{user} tu as actuellement {data[user]['points']} ♥")
-
-
-@routines.routine(minutes=5)
-async def points():
-	with open("data.json", "r") as f:
-			data = json.load(f)
-
-	response = rq.get(f"https://tmi.twitch.tv/group/user/{streamer_name}/chatters").json()
-	chatters = response["chatters"]["broadcaster"] + response["chatters"]["moderators"] + response["chatters"]["viewers"]
-	
-	for name in chatters:
-		if name in data.keys():
-			data[name]["points"] += 50
-    
-	with open("data.json", "w") as f:
-		json.dump(data, f)
-
-
-points.start()
+		if chatter in data.keys():
+			await ctx.send(f"{chatter} tu as actuellement {data[chatter]['points']} ♥ et amassé un total de {data[chatter]['total']} ♥")
 
 bot = Bot()
+
+@routines.routine(seconds=20)
+async def points():	
+	chatters = bot.get_chatters()
+	
+	if chatters is not None:
+		with open("data.json", "r") as f:
+			data = json.load(f)
+
+		for chatter in chatters:
+			if chatter.name in data.keys():
+				data[chatter.name]["points"] += 50
+				data[chatter.name]["total"] += 50
+
+		with open("data.json", "w") as f:
+			json.dump(data, f)
+
+points.start()
 bot.run()
