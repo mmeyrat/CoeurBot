@@ -1,9 +1,8 @@
 import os
 import json
 import simpleobsws
-from twitchio.ext import commands
-from twitchio.ext import routines
 from dotenv import load_dotenv
+from twitchio.ext import commands
 
 load_dotenv()
 
@@ -12,7 +11,7 @@ streamer_name = "aruten_"
 
 parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
 ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"], identification_parameters = parameters)
-  
+
 class Bot(commands.Bot):
 
 	chatters = None
@@ -123,37 +122,12 @@ class Bot(commands.Bot):
 				json.dump(data, f, indent = 4)	
 
 	@commands.command()
-	async def test(self, ctx: commands.Context):
+	async def test(self, ctx: commands.Context, number):
 		await ws.connect()
 		await ws.wait_until_identified()
 
-		data = {"keyId": "OBS_KEY_NUM5", "keyModifiers": { "control": True}}
-
+		data = {"keyId": f"OBS_KEY_NUM{number}", "keyModifiers": { "control": True}}
 		request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
-
-		ret = await ws.call(request)
-		if ret.ok():
-			print("Request succeeded! Response data: {}".format(ret.responseData))
-
+		
+		await ws.call(request)
 		await ws.disconnect()
-
-bot = Bot()
-
-@routines.routine(minutes = 5)
-async def points():	
-	chatters = bot.get_chatters()
-	
-	if chatters is not None:
-		with open("data.json", "r") as f:
-			data = json.load(f)
-
-		for chatter in chatters:
-			if chatter.name in data.keys():
-				data[chatter.name]["points"] += 50
-				data[chatter.name]["total"] += 50
-
-		with open("data.json", "w") as f:
-			json.dump(data, f, indent = 4)
-
-points.start()
-bot.run()
