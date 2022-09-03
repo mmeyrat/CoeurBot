@@ -1,6 +1,6 @@
 import os
 import json
-import requests as rq
+import simpleobsws
 from twitchio.ext import commands
 from twitchio.ext import routines
 from dotenv import load_dotenv
@@ -10,6 +10,9 @@ load_dotenv()
 streamer_id = "433976821"
 streamer_name = "aruten_"
 
+parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
+ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"], identification_parameters = parameters)
+  
 class Bot(commands.Bot):
 
 	chatters = None
@@ -118,6 +121,21 @@ class Bot(commands.Bot):
 
 		with open("data.json", "w") as f:
 				json.dump(data, f, indent = 4)	
+
+	@commands.command()
+	async def test(self, ctx: commands.Context):
+		await ws.connect()
+		await ws.wait_until_identified()
+
+		data = {"keyId": "OBS_KEY_NUM5", "keyModifiers": { "control": True}}
+
+		request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
+
+		ret = await ws.call(request)
+		if ret.ok():
+			print("Request succeeded! Response data: {}".format(ret.responseData))
+
+		await ws.disconnect()
 
 bot = Bot()
 
