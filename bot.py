@@ -6,21 +6,19 @@ from twitchio.ext import commands
 
 load_dotenv()
 
-streamer_id = "433976821"
-streamer_name = "aruten_"
-
-parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
-ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"], identification_parameters = parameters)
-
 class Bot(commands.Bot):
 
 	chatters = None
+	ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"])
+
 
 	def __init__(self):
-		super().__init__(token = os.environ["TOKEN"], prefix = "!", initial_channels = [streamer_name])
+		super().__init__(token = os.environ["TOKEN"], prefix = "!", initial_channels = [os.environ["STREAMER_NAME"]])
+
 
 	async def event_ready(self):
 		print(f"Logged in as {self.nick} ({self.user_id})")
+
 
 	async def event_message(self, message):
 		if message.echo:
@@ -43,8 +41,10 @@ class Bot(commands.Bot):
 
 		await self.handle_commands(message)
 
+
 	def get_chatters(self):
 		return self.chatters
+
 
 	def emote_spam(self, text, count):
 		message = ""
@@ -54,23 +54,28 @@ class Bot(commands.Bot):
 
 		return message
 
+
 	@commands.command(aliases = ["el"])
 	async def love(self, ctx: commands.Context):        
 		await ctx.send(self.emote_spam("<3 ", 100))
+
 
 	@commands.command(aliases = ["ed"])
 	async def dance(self, ctx: commands.Context):
 		await ctx.send(self.emote_spam("Edance", 50))
 
+
 	@commands.command(aliases = ["ep"])
 	async def pog(self, ctx: commands.Context):
 		await ctx.send(self.emote_spam("Epog", 50))
 
+
 	@commands.command(aliases = ["c"])
 	async def clip(self, ctx: commands.Context):
-		partial_user = self.create_user(streamer_id, streamer_name)
+		partial_user = self.create_user(os.environ["STREAMER_ID"], os.environ["STREAMER_NAME"])
 		clip = await partial_user.create_clip(token = os.environ["TOKEN"])
 		await ctx.send(f"Clip crée et dispo ici : {clip['edit_url'].replace('/edit', '')}")
+
 
 	@commands.command(aliases = ["b"])
 	async def balance(self, ctx: commands.Context):
@@ -81,6 +86,7 @@ class Bot(commands.Bot):
 
 		if chatter in data.keys():
 			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']} ♥ et amassé un total de {data[chatter]['total']} ♥")
+
 
 	@commands.command(aliases = ["r"])
 	async def rank(self, ctx: commands.Context):
@@ -101,12 +107,13 @@ class Bot(commands.Bot):
 		
 		await ctx.send(top_text)
 	
+
 	@commands.command(aliases = ["g"])
 	async def give(self, ctx: commands.Context, chatter, amount):
 		with open("data.json", "r") as f:
 				data = json.load(f)
 		
-		if ctx.author.name == streamer_name:
+		if ctx.author.name == os.environ["STREAMER_NAME"]:
 			if chatter in data.keys():
 				data[chatter]["points"] += int(amount)
 				data[chatter]["total"] += int(amount)	
@@ -121,13 +128,14 @@ class Bot(commands.Bot):
 		with open("data.json", "w") as f:
 				json.dump(data, f, indent = 4)	
 
+
 	@commands.command()
 	async def test(self, ctx: commands.Context, number):
-		await ws.connect()
-		await ws.wait_until_identified()
+		await self.ws.connect()
+		await self.ws.wait_until_identified()
 
 		data = {"keyId": f"OBS_KEY_NUM{number}", "keyModifiers": { "control": True}}
 		request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
 		
-		await ws.call(request)
-		await ws.disconnect()
+		await self.ws.call(request)
+		await self.ws.disconnect()
