@@ -77,6 +77,11 @@ class Bot(commands.Bot):
 		await ctx.send(f"Pour me suivre sur Twitter, c'est ici : https://twitter.com/{os.environ['STREAMER_NAME']} et pour rejoindre la communauté Discord c'est là : https://discord.gg/qpMzjhua7u")
 
 
+	@commands.command(aliases = ["e"])
+	async def extension(self, ctx: commands.Context):
+		await ctx.send(f"Téléchargez mon extension Chrome pour profiter des nouvelles emotes : https://github.com/mmeyrat/Twitch-Emotes-Extension")
+
+
 	@commands.command(aliases = ["c"])
 	async def clip(self, ctx: commands.Context):
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
