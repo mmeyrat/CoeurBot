@@ -1,5 +1,5 @@
-import json
 import bot
+import json
 from twitchio.ext import routines
 
 coeurbot = bot.Bot()

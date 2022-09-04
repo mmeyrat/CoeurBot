@@ -8,6 +8,7 @@ load_dotenv()
 
 class Bot(commands.Bot):
 
+
 	chatters = None
 	ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"])
 
@@ -70,6 +71,11 @@ class Bot(commands.Bot):
 		await ctx.send(self.emote_spam("Epog", 50))
 
 
+	@commands.command(aliases = ["l"])
+	async def links(self, ctx: commands.Context):
+		await ctx.send(f"Pour me suivre sur Twitter, c'est ici : https://twitter.com/{os.environ['STREAMER_NAME']} et pour rejoindre la communauté Discord c'est là : https://discord.gg/qpMzjhua7u")
+
+
 	@commands.command(aliases = ["c"])
 	async def clip(self, ctx: commands.Context):
 		partial_user = self.create_user(os.environ["STREAMER_ID"], os.environ["STREAMER_NAME"])
@@ -129,8 +135,8 @@ class Bot(commands.Bot):
 				json.dump(data, f, indent = 4)	
 
 
-	@commands.command()
-	async def test(self, ctx: commands.Context, number):
+	@commands.command(aliases = ["v"])
+	async def video(self, ctx: commands.Context, number):
 		await self.ws.connect()
 		await self.ws.wait_until_identified()
 
