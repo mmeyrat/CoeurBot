@@ -1,14 +1,18 @@
+import os
 import bot
 import json
+from dotenv import load_dotenv
 from twitchio.ext import routines
+
+load_dotenv()
 
 coeurbot = bot.Bot()
 
-@routines.routine(minutes = 5)
+@routines.routine(seconds = 5)
 async def points():	
 	chatters = coeurbot.get_chatters()
 	
-	if chatters is not None:
+	if (await coeurbot.fetch_streams(user_ids = [os.environ["STREAMER_ID"]])) and (chatters is not None):
 		with open("data.json", "r") as f:
 			data = json.load(f)
 

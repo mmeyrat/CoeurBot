@@ -27,18 +27,19 @@ class Bot(commands.Bot):
 
 		self.chatters = message.channel.chatters
 		chatter = message.author.name
+		
+		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):			
+			with open("data.json", "r") as f:
+				data = json.load(f)
 
-		with open("data.json", "r") as f:
-			data = json.load(f)
+			if chatter not in data.keys():
+				data[chatter] = { "points": 0, "total": 0 }
 
-		if chatter not in data.keys():
-			data[chatter] = { "points": 0, "total": 0 }
+			data[chatter]["points"] += 10
+			data[chatter]["total"] += 10
 
-		data[chatter]["points"] += 10
-		data[chatter]["total"] += 10
-
-		with open("data.json", "w") as f:
-			json.dump(data, f, indent = 4)
+			with open("data.json", "w") as f:
+				json.dump(data, f, indent = 4)
 
 		await self.handle_commands(message)
 
@@ -78,9 +79,10 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["c"])
 	async def clip(self, ctx: commands.Context):
-		partial_user = self.create_user(os.environ["STREAMER_ID"], os.environ["STREAMER_NAME"])
-		clip = await partial_user.create_clip(token = os.environ["TOKEN"])
-		await ctx.send(f"Clip crée et dispo ici : {clip['edit_url'].replace('/edit', '')}")
+		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
+			partial_user = self.create_user(os.environ["STREAMER_ID"], os.environ["STREAMER_NAME"])
+			clip = await partial_user.create_clip(token = os.environ["TOKEN"])
+			await ctx.send(f"Clip crée et dispo ici : {clip['edit_url'].replace('/edit', '')}")
 
 
 	@commands.command(aliases = ["b"])
@@ -91,7 +93,7 @@ class Bot(commands.Bot):
 			data = json.load(f)
 
 		if chatter in data.keys():
-			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']} ♥ et amassé un total de {data[chatter]['total']} ♥")
+			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']}♥ et amassé un total de {data[chatter]['total']}♥")
 
 
 	@commands.command(aliases = ["r"])
@@ -107,7 +109,7 @@ class Bot(commands.Bot):
 		
 		for i in range(top_size):
 			chatter = list(ordered_data)[i]
-			top_text += f"{i + 1}. {chatter} ({ordered_data[chatter]['total']} ♥)"
+			top_text += f"{i + 1}. {chatter} ({ordered_data[chatter]['total']}♥)"
 			if i < top_size - 1:
 				top_text += ", "
 		
@@ -129,7 +131,7 @@ class Bot(commands.Bot):
 				if data[chatter]["points"] < 0:
 					data[chatter]["points"] = 0
 
-		await ctx.send(f"{chatter}, tu as {data[chatter]['points']} ♥")
+		await ctx.send(f"{chatter}, tu as {data[chatter]['points']}♥")
 
 		with open("data.json", "w") as f:
 				json.dump(data, f, indent = 4)	
@@ -137,11 +139,12 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["v"])
 	async def video(self, ctx: commands.Context, number):
-		await self.ws.connect()
-		await self.ws.wait_until_identified()
+		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
+			await self.ws.connect()
+			await self.ws.wait_until_identified()
 
-		data = {"keyId": f"OBS_KEY_NUM{number}", "keyModifiers": { "control": True}}
-		request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
-		
-		await self.ws.call(request)
-		await self.ws.disconnect()
+			data = {"keyId": f"OBS_KEY_NUM{number}", "keyModifiers": { "control": True}}
+			request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
+			
+			await self.ws.call(request)
+			await self.ws.disconnect()
