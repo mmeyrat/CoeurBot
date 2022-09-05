@@ -199,3 +199,22 @@ class Bot(commands.Bot):
 					json.dump(data, f, indent = 4)
 
 				await self.websocket("OBS_KEY_NUMPERIOD")
+
+
+	@commands.command()
+	async def end(self, ctx: commands.Context):
+		cost = 50000
+
+		if not await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
+			chatter = ctx.author.name
+
+			with open("data.json", "r") as f:
+				data = json.load(f)
+
+			if chatter in data.keys() and data[chatter]["points"] > cost:
+				data[chatter]["points"] -= cost
+
+				with open("data.json", "w") as f:
+					json.dump(data, f, indent = 4)
+
+				await self.websocket("OBS_KEY_NUMPLUS")
