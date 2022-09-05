@@ -8,7 +8,7 @@ load_dotenv()
 
 coeurbot = bot.Bot()
 
-@routines.routine(seconds = 5)
+@routines.routine(minutes = 5)
 async def points():	
 	chatters = coeurbot.get_chatters()
 	
