@@ -11,6 +11,16 @@ class Bot(commands.Bot):
 
 	chatters = None
 	ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"])
+	videos = { "again": 6,
+				"borgir": 0,
+				"chika": 9,
+				"kick": 2,
+				"mario": 8,
+				"ora": 3,
+				"parrot": 4,
+				"rock": 7,
+				"what": 5,
+				"wink": 1 }
 
 
 	def __init__(self):
@@ -124,7 +134,7 @@ class Bot(commands.Bot):
 	@commands.command(aliases = ["g"])
 	async def give(self, ctx: commands.Context, chatter, amount):
 		with open("data.json", "r") as f:
-				data = json.load(f)
+			data = json.load(f)
 		
 		if ctx.author.name == os.environ["STREAMER_NAME"]:
 			if chatter in data.keys():
@@ -139,17 +149,28 @@ class Bot(commands.Bot):
 		await ctx.send(f"{chatter}, tu as {data[chatter]['points']}♥")
 
 		with open("data.json", "w") as f:
-				json.dump(data, f, indent = 4)	
+			json.dump(data, f, indent = 4)
 
 
 	@commands.command(aliases = ["v"])
-	async def video(self, ctx: commands.Context, number):
+	async def video(self, ctx: commands.Context, name):
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
-			await self.ws.connect()
-			await self.ws.wait_until_identified()
+			chatter = ctx.author.name
 
-			data = {"keyId": f"OBS_KEY_NUM{number}", "keyModifiers": { "control": True}}
-			request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
-			
-			await self.ws.call(request)
-			await self.ws.disconnect()
+			with open("data.json", "r") as f:
+				data = json.load(f)
+
+			if name in self.videos.keys() and chatter in data.keys() and data[chatter]["points"] > 20:
+				data[chatter]["points"] -= 20
+
+				with open("data.json", "w") as f:
+					json.dump(data, f, indent = 4)
+
+				await self.ws.connect()
+				await self.ws.wait_until_identified()
+
+				data = {"keyId": f"OBS_KEY_NUM{self.videos[name]}", "keyModifiers": { "control": True}}
+				request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
+				
+				await self.ws.call(request)
+				await self.ws.disconnect()
