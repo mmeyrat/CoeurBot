@@ -66,6 +66,17 @@ class Bot(commands.Bot):
 
 		return message
 
+	
+	async def websocket(self, keyId):
+		await self.ws.connect()
+		await self.ws.wait_until_identified()
+
+		data = {"keyId": keyId, "keyModifiers": { "control": True}}
+		request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
+		
+		await self.ws.call(request)
+		await self.ws.disconnect()
+
 
 	@commands.command(aliases = ["el"])
 	async def love(self, ctx: commands.Context):        
@@ -168,14 +179,7 @@ class Bot(commands.Bot):
 				with open("data.json", "w") as f:
 					json.dump(data, f, indent = 4)
 
-				await self.ws.connect()
-				await self.ws.wait_until_identified()
-
-				data = {"keyId": f"OBS_KEY_NUM{self.videos[name]}", "keyModifiers": { "control": True}}
-				request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
-				
-				await self.ws.call(request)
-				await self.ws.disconnect()
+				await self.websocket(f"OBS_KEY_NUM{self.videos[name]}")
 
 
 	@commands.command(aliases = ["f"])
@@ -194,11 +198,4 @@ class Bot(commands.Bot):
 				with open("data.json", "w") as f:
 					json.dump(data, f, indent = 4)
 
-				await self.ws.connect()
-				await self.ws.wait_until_identified()
-
-				data = {"keyId": f"OBS_KEY_NUMPERIOD", "keyModifiers": { "control": True}}
-				request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
-				
-				await self.ws.call(request)
-				await self.ws.disconnect()
+				await self.websocket("OBS_KEY_NUMPERIOD")
