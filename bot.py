@@ -154,14 +154,16 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["v"])
 	async def video(self, ctx: commands.Context, name):
+		cost = 20
+
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
 
 			with open("data.json", "r") as f:
 				data = json.load(f)
 
-			if name in self.videos.keys() and chatter in data.keys() and data[chatter]["points"] > 20:
-				data[chatter]["points"] -= 20
+			if name in self.videos.keys() and chatter in data.keys() and data[chatter]["points"] > cost:
+				data[chatter]["points"] -= cost
 
 				with open("data.json", "w") as f:
 					json.dump(data, f, indent = 4)
@@ -170,6 +172,32 @@ class Bot(commands.Bot):
 				await self.ws.wait_until_identified()
 
 				data = {"keyId": f"OBS_KEY_NUM{self.videos[name]}", "keyModifiers": { "control": True}}
+				request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
+				
+				await self.ws.call(request)
+				await self.ws.disconnect()
+
+
+	@commands.command(aliases = ["f"])
+	async def fast(self, ctx: commands.Context):
+		cost = 60
+
+		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
+			chatter = ctx.author.name
+
+			with open("data.json", "r") as f:
+				data = json.load(f)
+
+			if chatter in data.keys() and data[chatter]["points"] > cost:
+				data[chatter]["points"] -= cost
+
+				with open("data.json", "w") as f:
+					json.dump(data, f, indent = 4)
+
+				await self.ws.connect()
+				await self.ws.wait_until_identified()
+
+				data = {"keyId": f"OBS_KEY_NUMPERIOD", "keyModifiers": { "control": True}}
 				request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
 				
 				await self.ws.call(request)
