@@ -143,21 +143,25 @@ class Bot(commands.Bot):
 	
 
 	@commands.command(aliases = ["g"])
-	async def give(self, ctx: commands.Context, chatter, amount):
+	async def give(self, ctx: commands.Context, user, amount):
+		chatter = ctx.author.name
+
 		with open("data.json", "r") as f:
 			data = json.load(f)
 		
-		if ctx.author.name == os.environ["STREAMER_NAME"]:
-			if chatter in data.keys():
-				data[chatter]["points"] += int(amount)
-				data[chatter]["total"] += int(amount)	
+		if chatter == os.environ["STREAMER_NAME"]:
+			if user in data.keys():
+				data[user]["points"] += int(amount)
+				data[user]["total"] += int(amount)	
+				
+				await ctx.send(f"{user}, tu as {data[user]['points']}♥")
 		else:
 			if chatter in data.keys():
 				data[chatter]["points"] -= int(amount)
 				if data[chatter]["points"] < 0:
 					data[chatter]["points"] = 0
 
-		await ctx.send(f"{chatter}, tu as {data[chatter]['points']}♥")
+				await ctx.send(f"{chatter}, tu as {data[chatter]['points']}♥")
 
 		with open("data.json", "w") as f:
 			json.dump(data, f, indent = 4)
@@ -165,7 +169,7 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["v"])
 	async def video(self, ctx: commands.Context, name):
-		cost = 20
+		cost = 50
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
@@ -184,7 +188,7 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["f"])
 	async def fast(self, ctx: commands.Context):
-		cost = 60
+		cost = 100
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
@@ -203,7 +207,7 @@ class Bot(commands.Bot):
 
 	@commands.command()
 	async def end(self, ctx: commands.Context):
-		cost = 50000
+		cost = 100000
 
 		if not await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
