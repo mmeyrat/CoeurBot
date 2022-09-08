@@ -9,9 +9,9 @@ load_dotenv()
 
 class Bot(commands.Bot):
 
-
-	is_fast = False
 	chatters = None
+	prize = 0
+	is_fast = False
 	ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"])
 	videos = { "again": 6,
 				"borgir": 0,
@@ -59,6 +59,10 @@ class Bot(commands.Bot):
 
 	def get_chatters(self):
 		return self.chatters
+
+
+	def set_prize(self, prize):
+		self.prize = prize
 
 
 	def emote_spam(self, text, count):
@@ -145,7 +149,7 @@ class Bot(commands.Bot):
 		await ctx.send(top_text)
 	
 
-	@commands.command(aliases = ["g"])
+	@commands.command()
 	async def give(self, ctx: commands.Context, user, amount):
 		chatter = ctx.author.name
 
@@ -168,6 +172,26 @@ class Bot(commands.Bot):
 
 		with open("data.json", "w") as f:
 			json.dump(data, f, indent = 4)
+
+
+	@commands.command(aliases = ["g"])
+	async def get(self, ctx: commands.Context):
+		if self.prize > 0:
+			chatter = ctx.author.name
+
+			with open("data.json", "r") as f:
+				data = json.load(f)
+
+			if chatter in data.keys():
+				data[chatter]["points"] += self.prize
+				data[chatter]["total"] += self.prize
+
+				await ctx.send(f"{chatter}, tu as gagné {self.prize}♥")
+
+				self.prize = 0				
+ 
+				with open("data.json", "w") as f:
+					json.dump(data, f, indent = 4)
 
 
 	@commands.command(aliases = ["v"])

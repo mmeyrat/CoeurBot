@@ -1,6 +1,7 @@
 import os
 import bot
 import json
+import numpy as np
 from dotenv import load_dotenv
 from twitchio.ext import routines
 
@@ -24,5 +25,15 @@ async def points():
 		with open("data.json", "w") as f:
 			json.dump(data, f, indent = 4)
 
+
+@routines.routine(seconds = 10, wait_first = True)
+async def lottery():
+	coeurbot.set_prize(50)
+	await coeurbot.get_channel(os.environ["STREAMER_NAME"]).send("test")
+
+	#if (await coeurbot.fetch_streams(user_ids = [os.environ["STREAMER_ID"]])):
+
+
 points.start()
+lottery.start()
 coeurbot.run()
