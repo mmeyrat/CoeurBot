@@ -126,7 +126,7 @@ class Bot(commands.Bot):
 			data = json.load(f)
 
 		if chatter in data.keys():
-			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']}♥ et amassé un total de {data[chatter]['total']}♥")
+			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']}♥ et amassé un total de {data[chatter]['total']}♥.")
 
 
 	@commands.command(aliases = ["r"])
@@ -161,14 +161,14 @@ class Bot(commands.Bot):
 				data[user]["points"] += int(amount)
 				data[user]["total"] += int(amount)	
 				
-				await ctx.send(f"{user}, tu as {data[user]['points']}♥")
+				await ctx.send(f"{user}, tu as {data[user]['points']}♥.")
 		else:
 			if chatter in data.keys():
 				data[chatter]["points"] -= int(amount)
 				if data[chatter]["points"] < 0:
 					data[chatter]["points"] = 0
 
-				await ctx.send(f"{chatter}, tu as {data[chatter]['points']}♥")
+				await ctx.send(f"{chatter}, tu as {data[chatter]['points']}♥.")
 
 		with open("data.json", "w") as f:
 			json.dump(data, f, indent = 4)
@@ -186,7 +186,7 @@ class Bot(commands.Bot):
 				data[chatter]["points"] += self.prize
 				data[chatter]["total"] += self.prize
 
-				await ctx.send(f"{chatter}, tu as gagné {self.prize}♥")
+				await ctx.send(f"{chatter}, tu as gagné {self.prize}♥.")
 
 				self.prize = 0				
  
