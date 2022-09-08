@@ -3,12 +3,14 @@ import json
 import simpleobsws
 from dotenv import load_dotenv
 from twitchio.ext import commands
+from twitchio.ext import routines
 
 load_dotenv()
 
 class Bot(commands.Bot):
 
 
+	is_fast = False
 	chatters = None
 	ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"])
 	videos = { "again": 6,
@@ -100,7 +102,7 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["e"])
 	async def extension(self, ctx: commands.Context):
-		await ctx.send(f"Téléchargez mon extension Chrome pour profiter des nouvelles emotes : https://github.com/mmeyrat/Twitch-Emotes-Extension")
+		await ctx.send(f"Téléchargez mon extension Firefox pour profiter des nouvelles emotes : https://addons.mozilla.org/en/firefox/addon/twitch-emotes-extension")
 
 
 	@commands.command(aliases = ["c"])
@@ -188,9 +190,9 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["f"])
 	async def fast(self, ctx: commands.Context):
-		cost = 100
+		cost = 150
 
-		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
+		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]) and not self.is_fast:
 			chatter = ctx.author.name
 
 			with open("data.json", "r") as f:
@@ -203,6 +205,8 @@ class Bot(commands.Bot):
 					json.dump(data, f, indent = 4)
 
 				await self.websocket("OBS_KEY_NUMPERIOD")
+				self.is_fast = True
+				self.stop_fast.start()
 
 
 	@commands.command()
@@ -222,3 +226,9 @@ class Bot(commands.Bot):
 					json.dump(data, f, indent = 4)
 
 				await self.websocket("OBS_KEY_NUMPLUS")
+
+
+	@routines.routine(seconds = 30, iterations = 1, wait_first = True)
+	async def stop_fast(self):
+		await self.websocket("OBS_KEY_NUMPERIOD")
+		self.is_fast = False
