@@ -46,6 +46,7 @@ class Bot(commands.Bot):
 
 			if chatter not in data.keys():
 				data[chatter] = { "points": 0, "total": 0 }
+				self.reminder.start(message)
 
 			data[chatter]["points"] += 10
 			data[chatter]["total"] += 10
@@ -232,3 +233,9 @@ class Bot(commands.Bot):
 	async def stop_fast(self):
 		await self.websocket("OBS_KEY_NUMPERIOD")
 		self.is_fast = False
+
+
+	@routines.routine(seconds = 150, iterations = 1, wait_first = True)
+	async def reminder(self, message):
+		ctx = await self.get_context(message)
+		await ctx.send(f"N'hésitez pas à rejoindre la communauté Discord : https://discord.gg/qpMzjhua7u")
