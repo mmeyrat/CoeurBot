@@ -92,12 +92,12 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["ed"])
 	async def dance(self, ctx: commands.Context):
-		await ctx.send(self.emote_spam("Edance", 50))
+		await ctx.send(self.emote_spam("Edance", 60))
 
 
 	@commands.command(aliases = ["ep"])
 	async def pog(self, ctx: commands.Context):
-		await ctx.send(self.emote_spam("Epog", 50))
+		await ctx.send(self.emote_spam("Epog", 60))
 
 
 	@commands.command(aliases = ["l"])
@@ -236,9 +236,9 @@ class Bot(commands.Bot):
 
 	@commands.command()
 	async def end(self, ctx: commands.Context):
-		cost = 100000
+		cost = 150000
 
-		if not await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
+		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
 
 			with open("data.json", "r") as f:
