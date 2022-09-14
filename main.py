@@ -43,7 +43,7 @@ async def lottery():
 		prize = random.choices(numbers, weights = sorted_weights, k = 1)[0] * 10
 
 		coeurbot.set_prize(prize)
-		await coeurbot.get_channel(os.environ["STREAMER_NAME"]).send(f"/announce Offre de {prize}♥, !get pour les récupérer en premier.")
+		await coeurbot.get_channel(os.environ["STREAMER_NAME"]).send(f"⚠ Offre de {prize}♥, !get pour les récupérer en premier.")
 
 
 points.start()

@@ -40,7 +40,7 @@ class Bot(commands.Bot):
 		self.chatters = message.channel.chatters
 		chatter = message.author.name
 		
-		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):			
+		if (await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]])) and (chatter != os.environ["STREAMER_NAME"]):			
 			with open("data.json", "r") as f:
 				data = json.load(f)
 
@@ -78,7 +78,7 @@ class Bot(commands.Bot):
 		await self.ws.connect()
 		await self.ws.wait_until_identified()
 
-		data = {"keyId": keyId, "keyModifiers": { "control": True}}
+		data = {"keyId": keyId, "keyModifiers": { "control": True }}
 		request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
 		
 		await self.ws.call(request)
@@ -115,7 +115,7 @@ class Bot(commands.Bot):
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			partial_user = self.create_user(os.environ["STREAMER_ID"], os.environ["STREAMER_NAME"])
 			clip = await partial_user.create_clip(token = os.environ["TOKEN"])
-			await ctx.send(f"Clip crée et dispo ici : {clip['edit_url'].replace('/edit', '')}")
+			await ctx.send(f"Clip crée! Disponible ici : {clip['edit_url'].replace('/edit', '')}")
 
 
 	@commands.command(aliases = ["b"])
@@ -236,7 +236,7 @@ class Bot(commands.Bot):
 
 	@commands.command()
 	async def end(self, ctx: commands.Context):
-		cost = 150000
+		cost = 100000
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
