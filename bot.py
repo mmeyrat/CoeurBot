@@ -92,12 +92,12 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["ed"])
 	async def dance(self, ctx: commands.Context):
-		await ctx.send(self.emote_spam("Edance", 60))
+		await ctx.send(self.emote_spam("Edance", 72))
 
 
 	@commands.command(aliases = ["ep"])
 	async def pog(self, ctx: commands.Context):
-		await ctx.send(self.emote_spam("Epog", 60))
+		await ctx.send(self.emote_spam("Epog", 61))
 
 
 	@commands.command(aliases = ["l"])
