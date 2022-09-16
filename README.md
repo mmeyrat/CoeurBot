@@ -1,6 +1,6 @@
 # CoeurBot
 
-CoeurBot is a Twitch chat application mostly made with TwitchIO. It responds to specific commands to animate a Twitch stream. To do so, it includes a points system and the implementation of websockets to connect with OBS.
+CoeurBot is a Twitch chat application made with Python 3 and based on[TwitchIO](https://github.com/TwitchIO/TwitchIO). It responds to specific commands in order to animate a Twitch stream. To do so, it includes a points system and the implementation of websockets to connect with OBS.
 
 
 ## Installation Guide

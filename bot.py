@@ -41,7 +41,7 @@ class Bot(commands.Bot):
 		chatter = message.author.name
 		
 		if (await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]])) and (chatter != os.environ["STREAMER_NAME"]):			
-			with open("data.json", "r") as f:
+			with open("data.json", "r", encoding = "utf8") as f:
 				data = json.load(f)
 
 			if chatter not in data.keys():
@@ -51,7 +51,7 @@ class Bot(commands.Bot):
 			data[chatter]["points"] += 10
 			data[chatter]["total"] += 10
 
-			with open("data.json", "w") as f:
+			with open("data.json", "w", encoding = "utf8") as f:
 				json.dump(data, f, indent = 4)
 
 		await self.handle_commands(message)
@@ -63,15 +63,6 @@ class Bot(commands.Bot):
 
 	def set_prize(self, prize):
 		self.prize = prize
-
-
-	def emote_spam(self, text, count):
-		message = ""
-
-		for i in range(count):
-			message += text
-
-		return message
 
 	
 	async def websocket(self, keyId):
@@ -85,19 +76,36 @@ class Bot(commands.Bot):
 		await self.ws.disconnect()
 
 
-	@commands.command(aliases = ["el"])
-	async def love(self, ctx: commands.Context):        
-		await ctx.send(self.emote_spam("<3 ", 100))
+	@commands.command()
+	async def love(self, ctx: commands.Context):   
+		chatter = ctx.author.name
+		message = ""
 
+		with open("data.json", "r", encoding = "utf8") as f:
+			data = json.load(f)
 
-	@commands.command(aliases = ["ed"])
-	async def dance(self, ctx: commands.Context):
-		await ctx.send(self.emote_spam("Edance", 72))
+		if chatter in data.keys():
+			data[chatter]["points"] += 1
+			data[chatter]["total"] += 1
 
+			with open("data.json", "w", encoding = "utf8") as f:
+				json.dump(data, f, indent = 4)
+     
+		for i in range(100):
+			message += "<3 "
 
-	@commands.command(aliases = ["ep"])
-	async def pog(self, ctx: commands.Context):
-		await ctx.send(self.emote_spam("Epog", 61))
+		await ctx.send(message)
+
+	
+	@commands.command(aliases = ["e"])
+	async def emote(self, ctx: commands.Context, emote):
+		message_max_size = 500
+		message = ""
+
+		while (len(message) < message_max_size - len(emote)):
+			message += f"{emote} "
+
+		await ctx.send(message)
 
 
 	@commands.command(aliases = ["l"])
@@ -105,7 +113,7 @@ class Bot(commands.Bot):
 		await ctx.send(f"Pour me suivre sur Twitter, c'est ici : https://twitter.com/{os.environ['STREAMER_NAME']} et pour rejoindre la communauté Discord c'est là : https://discord.gg/qpMzjhua7u")
 
 
-	@commands.command(aliases = ["e"])
+	@commands.command()
 	async def extension(self, ctx: commands.Context):
 		await ctx.send(f"Téléchargez mon extension Firefox pour profiter des nouvelles emotes : https://addons.mozilla.org/en/firefox/addon/twitch-emotes-extension")
 
@@ -122,7 +130,7 @@ class Bot(commands.Bot):
 	async def balance(self, ctx: commands.Context):
 		chatter = ctx.author.name
 
-		with open("data.json", "r") as f:
+		with open("data.json", "r", encoding = "utf8") as f:
 			data = json.load(f)
 
 		if chatter in data.keys():
@@ -133,7 +141,7 @@ class Bot(commands.Bot):
 	async def rank(self, ctx: commands.Context):
 		max_top_size = 10
 
-		with open("data.json", "r") as f:
+		with open("data.json", "r", encoding = "utf8") as f:
 			data = json.load(f)
 
 		ordered_data = dict(sorted(data.items(), key = lambda item: item[1]["total"], reverse = True)[:max_top_size])
@@ -153,7 +161,7 @@ class Bot(commands.Bot):
 	async def give(self, ctx: commands.Context, user, amount):
 		chatter = ctx.author.name
 
-		with open("data.json", "r") as f:
+		with open("data.json", "r", encoding = "utf8") as f:
 			data = json.load(f)
 		
 		if chatter == os.environ["STREAMER_NAME"]:
@@ -170,7 +178,7 @@ class Bot(commands.Bot):
 
 				await ctx.send(f"{chatter}, tu as {data[chatter]['points']}♥.")
 
-		with open("data.json", "w") as f:
+		with open("data.json", "w", encoding = "utf8") as f:
 			json.dump(data, f, indent = 4)
 
 
@@ -179,7 +187,7 @@ class Bot(commands.Bot):
 		if self.prize > 0:
 			chatter = ctx.author.name
 
-			with open("data.json", "r") as f:
+			with open("data.json", "r", encoding = "utf8") as f:
 				data = json.load(f)
 
 			if chatter in data.keys():
@@ -190,7 +198,7 @@ class Bot(commands.Bot):
 
 				self.prize = 0				
  
-				with open("data.json", "w") as f:
+				with open("data.json", "w", encoding = "utf8") as f:
 					json.dump(data, f, indent = 4)
 
 
@@ -201,13 +209,13 @@ class Bot(commands.Bot):
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
 
-			with open("data.json", "r") as f:
+			with open("data.json", "r", encoding = "utf8") as f:
 				data = json.load(f)
 
 			if name in self.videos.keys() and chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
 
-				with open("data.json", "w") as f:
+				with open("data.json", "w", encoding = "utf8") as f:
 					json.dump(data, f, indent = 4)
 
 				await self.websocket(f"OBS_KEY_NUM{self.videos[name]}")
@@ -220,13 +228,13 @@ class Bot(commands.Bot):
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]) and not self.is_fast:
 			chatter = ctx.author.name
 
-			with open("data.json", "r") as f:
+			with open("data.json", "r", encoding = "utf8") as f:
 				data = json.load(f)
 
 			if chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
 
-				with open("data.json", "w") as f:
+				with open("data.json", "w", encoding = "utf8") as f:
 					json.dump(data, f, indent = 4)
 
 				await self.websocket("OBS_KEY_NUMPERIOD")
@@ -241,13 +249,13 @@ class Bot(commands.Bot):
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
 
-			with open("data.json", "r") as f:
+			with open("data.json", "r", encoding = "utf8") as f:
 				data = json.load(f)
 
 			if chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
 
-				with open("data.json", "w") as f:
+				with open("data.json", "w", encoding = "utf8") as f:
 					json.dump(data, f, indent = 4)
 
 				await self.websocket("OBS_KEY_NUMPLUS")

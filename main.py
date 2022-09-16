@@ -14,7 +14,7 @@ async def points():
 	chatters = coeurbot.get_chatters()
 	
 	if (await coeurbot.fetch_streams(user_ids = [os.environ["STREAMER_ID"]])) and (chatters is not None):
-		with open("data.json", "r") as f:
+		with open("data.json", "r", encoding = "utf8") as f:
 			data = json.load(f)
 
 		for chatter in chatters:
@@ -22,7 +22,7 @@ async def points():
 				data[chatter.name]["points"] += 50
 				data[chatter.name]["total"] += 50
 
-		with open("data.json", "w") as f:
+		with open("data.json", "w", encoding = "utf8") as f:
 			json.dump(data, f, indent = 4)
 
 
