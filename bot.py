@@ -267,13 +267,15 @@ class Bot(commands.Bot):
 
 	@commands.command()
 	async def badge(self, ctx: commands.Context, emoji):
+		cost = 500
 		chatter = ctx.author.name
 
 		if is_emoji(emoji):
 			with open("data.json", "r", encoding = "utf8") as f:
 				data = json.load(f)
 
-			if chatter in data.keys():
+			if chatter in data.keys() and data[chatter]["points"] > cost:
+				data[chatter]["points"] -= cost
 				data[chatter]["badge"] = emoji
 
 				with open("data.json", "w", encoding = "utf8") as f:
