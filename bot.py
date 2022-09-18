@@ -2,6 +2,7 @@ import os
 import json
 import simpleobsws
 from dotenv import load_dotenv
+from emoji import is_emoji
 from twitchio.ext import commands
 from twitchio.ext import routines
 
@@ -264,6 +265,21 @@ class Bot(commands.Bot):
 				await self.websocket("OBS_KEY_NUMPLUS")
 
 
+	@commands.command()
+	async def badge(self, ctx: commands.Context, emoji):
+		chatter = ctx.author.name
+
+		if is_emoji(emoji):
+			with open("data.json", "r", encoding = "utf8") as f:
+				data = json.load(f)
+
+			if chatter in data.keys():
+				data[chatter]["badge"] = emoji
+
+				with open("data.json", "w", encoding = "utf8") as f:
+					json.dump(data, f, indent = 4)
+
+
 	@routines.routine(seconds = 30, iterations = 1, wait_first = True)
 	async def stop_fast(self):
 		await self.websocket("OBS_KEY_NUMPERIOD")
@@ -273,4 +289,4 @@ class Bot(commands.Bot):
 	@routines.routine(seconds = 150, iterations = 1, wait_first = True)
 	async def reminder(self, message):
 		ctx = await self.get_context(message)
-		await ctx.send(f"N'hésitez pas à rejoindre la communauté Discord : https://discord.gg/qpMzjhua7u")
+		await ctx.send(f"N'hésitez pas à rejoindre la communauté Discord : https://discord.gg/qpMzjhua7u et à télécharger l'extension Firefox : https://addons.mozilla.org/en/firefox/addon/twitch-emotes-extension")
