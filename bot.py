@@ -92,14 +92,14 @@ class Bot(commands.Bot):
 			with open("data.json", "w", encoding = "utf8") as f:
 				json.dump(data, f, indent = 4)
      
-		for i in range(100):
-			message += "<3 "
+		for i in range(50):
+			message += "<3 Elove "
 
 		await ctx.send(message)
 
 	
-	@commands.command(aliases = ["e"])
-	async def emote(self, ctx: commands.Context, emote):
+	@commands.command(aliases = ["s"])
+	async def spam(self, ctx: commands.Context, emote):
 		max_emote_quantity = 100
 		message_max_size = 500
 		emote_quantity = 0
@@ -117,7 +117,7 @@ class Bot(commands.Bot):
 		await ctx.send(f"Pour me suivre sur Twitter, c'est ici : https://twitter.com/{os.environ['STREAMER_NAME']} et pour rejoindre la communauté Discord c'est là : https://discord.gg/qpMzjhua7u")
 
 
-	@commands.command(aliases = ["ex"])
+	@commands.command(aliases = ["e"])
 	async def extension(self, ctx: commands.Context):
 		await ctx.send(f"Téléchargez mon extension Firefox pour profiter des nouvelles emotes : https://addons.mozilla.org/en/firefox/addon/twitch-emotes-extension")
 
