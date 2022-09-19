@@ -15,15 +15,15 @@ class Bot(commands.Bot):
 	is_fast = False
 	ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"])
 	videos = { "again": 6,
-				"borgir": 0,
-				"chika": 9,
-				"kick": 2,
-				"mario": 8,
-				"ora": 3,
-				"parrot": 4,
-				"rock": 7,
-				"what": 5,
-				"wink": 1 }
+			   "borgir": 0,
+			   "chika": 9,
+			   "kick": 2,
+			   "mario": 8,
+			   "ora": 3,
+			   "parrot": 4,
+			   "rock": 7,
+			   "what": 5,
+			   "wink": 1 }
 
 
 	def __init__(self):
@@ -70,7 +70,7 @@ class Bot(commands.Bot):
 		await self.ws.connect()
 		await self.ws.wait_until_identified()
 
-		data = {"keyId": keyId, "keyModifiers": { "control": True }}
+		data = { "keyId": keyId, "keyModifiers": { "control": True } }
 		request = simpleobsws.Request(requestType = "TriggerHotkeyByKeySequence", requestData = data) 
 		
 		await self.ws.call(request)
@@ -104,6 +104,8 @@ class Bot(commands.Bot):
 		message_max_size = 500
 		emote_quantity = 0
 		message = ""
+		
+		emote = emote.split(" ")[0]
 
 		while ((len(message) < message_max_size - len(emote)) and (emote_quantity < max_emote_quantity)):
 			message += f"{emote} "
