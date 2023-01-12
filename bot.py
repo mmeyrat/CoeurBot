@@ -284,6 +284,25 @@ class Bot(commands.Bot):
 					json.dump(data, f, indent = 4)
 
 
+	@commands.command()
+	async def banner(self, ctx: commands.Context, banner):
+		cost = 2000
+		chatter = ctx.author.name
+
+		for b in os.listdir("../Twitch-REST-API/banners/"):
+			if b.split(".")[0] == banner:
+				
+				with open("data.json", "r", encoding = "utf8") as f:
+					data = json.load(f)
+
+				if chatter in data.keys() and data[chatter]["points"] > cost:
+					data[chatter]["points"] -= cost
+					data[chatter]["banner"] = banner
+
+					with open("data.json", "w", encoding = "utf8") as f:
+						json.dump(data, f, indent = 4)
+
+
 	@routines.routine(seconds = 30, iterations = 1, wait_first = True)
 	async def stop_fast(self):
 		await self.websocket("OBS_KEY_NUMPERIOD")
