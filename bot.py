@@ -81,19 +81,20 @@ class Bot(commands.Bot):
 	async def love(self, ctx: commands.Context):   
 		chatter = ctx.author.name
 		message = ""
-
-		with open("data.json", "r", encoding = "utf8") as f:
-			data = json.load(f)
-
-		if chatter in data.keys():
-			data[chatter]["points"] += 1
-			data[chatter]["total"] += 1
-
-			with open("data.json", "w", encoding = "utf8") as f:
-				json.dump(data, f, indent = 4)
-     
+		
 		for i in range(50):
 			message += "<3 Elove "
+
+		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
+			with open("data.json", "r", encoding = "utf8") as f:
+				data = json.load(f)
+
+			if chatter in data.keys():
+				data[chatter]["points"] += 1
+				data[chatter]["total"] += 1
+
+				with open("data.json", "w", encoding = "utf8") as f:
+					json.dump(data, f, indent = 4)
 
 		await ctx.send(message)
 
