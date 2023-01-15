@@ -302,6 +302,21 @@ class Bot(commands.Bot):
 					with open("data.json", "w", encoding = "utf8") as f:
 						json.dump(data, f, indent = 4)
 
+	
+	@commands.command()
+	async def remove(self, ctx: commands.Context, type):
+		chatter = ctx.author.name
+		
+		if type == "badge" or type == "banner":
+			with open("data.json", "r", encoding = "utf8") as f:
+				data = json.load(f)
+
+			if chatter in data.keys() and type in data[chatter].keys():
+				del data[chatter][type]
+
+				with open("data.json", "w", encoding = "utf8") as f:
+					json.dump(data, f, indent = 4)			
+
 
 	@routines.routine(seconds = 30, iterations = 1, wait_first = True)
 	async def stop_fast(self):
