@@ -19,8 +19,8 @@ async def points():
 
 		for chatter in chatters:
 			if chatter.name in data.keys():
-				data[chatter.name]["points"] += 50
-				data[chatter.name]["total"] += 50
+				data[chatter.name]["points"] += 100
+				data[chatter.name]["total"] += 100
 
 		with open("data.json", "w", encoding = "utf8") as f:
 			json.dump(data, f, indent = 4)

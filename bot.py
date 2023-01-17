@@ -117,12 +117,12 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["l"])
 	async def links(self, ctx: commands.Context):
-		await ctx.send(f"Pour me suivre sur Twitter, c'est ici : https://twitter.com/{os.environ['STREAMER_NAME']} et pour rejoindre la communauté Discord c'est là : https://discord.gg/qpMzjhua7u")
+		await ctx.send(f"Pour rejoindre la communauté Discord : https://discord.gg/qpMzjhua7u, pour me suivre sur TikTok : https://www.tiktok.com/@{os.environ['STREAMER_NAME']} et pour voir les VOD : https://www.youtube.com/@{os.environ['STREAMER_NAME']}.")
 
 
 	@commands.command(aliases = ["e"])
 	async def extension(self, ctx: commands.Context):
-		await ctx.send(f"Téléchargez mon extension Firefox pour profiter des nouvelles emotes : https://addons.mozilla.org/en/firefox/addon/twitch-emotes-extension")
+		await ctx.send(f"Téléchargez mon extension Firefox pour profiter des nouvelles emotes et autres cosmétiques : https://addons.mozilla.org/en/firefox/addon/twitch-emotes-extension")
 
 
 	@commands.command(aliases = ["c"])
@@ -211,7 +211,7 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["v"])
 	async def video(self, ctx: commands.Context, name):
-		cost = 50
+		cost = 70
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
@@ -251,7 +251,7 @@ class Bot(commands.Bot):
 
 	@commands.command()
 	async def end(self, ctx: commands.Context):
-		cost = 100000
+		cost = 120000
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
@@ -270,7 +270,7 @@ class Bot(commands.Bot):
 
 	@commands.command()
 	async def badge(self, ctx: commands.Context, emoji):
-		cost = 500
+		cost = 700
 		chatter = ctx.author.name
 
 		if is_emoji(emoji):
@@ -287,7 +287,7 @@ class Bot(commands.Bot):
 
 	@commands.command()
 	async def banner(self, ctx: commands.Context, banner):
-		cost = 2000
+		cost = 4500
 		chatter = ctx.author.name
 
 		for b in os.listdir("../Twitch-REST-API/banners/"):
