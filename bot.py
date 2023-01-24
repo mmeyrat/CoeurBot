@@ -191,18 +191,21 @@ class Bot(commands.Bot):
 
 	@commands.command(aliases = ["g"])
 	async def get(self, ctx: commands.Context):
-		if self.prize > 0:
+		if self.prize != 0:
 			chatter = ctx.author.name
 
 			with open("data.json", "r", encoding = "utf8") as f:
 				data = json.load(f)
 
-			if chatter in data.keys():
+			if chatter in data.keys():				
 				data[chatter]["points"] += self.prize
-				data[chatter]["total"] += self.prize
+				message = f"{chatter}, tu as perdu {self.prize * -1}♥."
 
-				await ctx.send(f"{chatter}, tu as gagné {self.prize}♥.")
+				if self.prize > 0:
+					data[chatter]["total"] += self.prize
+					message = f"{chatter}, tu as gagné {self.prize}♥."
 
+				await ctx.send(message)
 				self.prize = 0				
  
 				with open("data.json", "w", encoding = "utf8") as f:

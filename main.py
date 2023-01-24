@@ -28,9 +28,9 @@ async def points():
 
 @routines.routine(minutes = 15, wait_first = True)
 async def lottery():
-	probability = random.randint(0, 2)
+	probability = random.randint(0, 8)
 
-	if (await coeurbot.fetch_streams(user_ids = [os.environ["STREAMER_ID"]])) and (probability == 0):
+	if (await coeurbot.fetch_streams(user_ids = [os.environ["STREAMER_ID"]])) and (probability < 3):
 		size = 99
 		scale = 10**4
 
@@ -41,9 +41,14 @@ async def lottery():
 		sorted_weights = sorted([(weights[i] - weights[i - 1]) / scale for i in range(1, size + 1)], reverse = True)
 
 		prize = random.choices(numbers, weights = sorted_weights, k = 1)[0] * 10
+		message = f"⚠ Offre de {prize}♥, !get pour les récupérer en premier."
+
+		if probability == 0:
+			message = f"⚠ Offre d'une perte de {prize}♥, !get pour se faire dépouiller en premier."
+			prize *= -1
 
 		coeurbot.set_prize(prize)
-		await coeurbot.get_channel(os.environ["STREAMER_NAME"]).send(f"⚠ Offre de {prize}♥, !get pour les récupérer en premier.")
+		await coeurbot.get_channel(os.environ["STREAMER_NAME"]).send(message)
 
 
 points.start()
