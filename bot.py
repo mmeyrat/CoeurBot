@@ -172,6 +172,8 @@ class Bot(commands.Bot):
 			data = json.load(f)
 		
 		if chatter == os.environ["STREAMER_NAME"]:
+			user = user.lower()
+
 			if user in data.keys():
 				data[user]["points"] += int(amount)
 				data[user]["total"] += int(amount)	
@@ -179,7 +181,8 @@ class Bot(commands.Bot):
 				await ctx.send(f"{user}, tu as {data[user]['points']}♥.")
 		else:
 			if chatter in data.keys():
-				data[chatter]["points"] -= int(amount)
+				data[chatter]["points"] -= abs(int(amount))
+
 				if data[chatter]["points"] < 0:
 					data[chatter]["points"] = 0
 
