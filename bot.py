@@ -64,10 +64,8 @@ class Bot(commands.Bot):
 
 		await self.handle_commands(message)
 
-
 	def get_chatters(self):
 		return self.chatters
-
 
 	def set_prize(self, prize):
 		self.prize = prize
@@ -146,15 +144,13 @@ class Bot(commands.Bot):
 
 		ordered_data = dict(sorted(data.items(), key = lambda item: item[1]["total"], reverse = True)[:max_top_size])
 		top_size = len(ordered_data)
-		top_text = f"Top {top_size} : "
+		top_text = f"Top {top_size} :"
 		
 		for i in range(top_size):
 			chatter = list(ordered_data)[i]
-			top_text += f"{i + 1}. {chatter} ({ordered_data[chatter]['total']}♥)"
-			if i < top_size - 1:
-				top_text += ", "
+			top_text += f" {i + 1}. {chatter} ({ordered_data[chatter]['total']}♥),"
 		
-		await ctx.send(top_text)
+		await ctx.send(top_text[:-1])
 	
 	@commands.command()
 	async def give(self, ctx: commands.Context, user, amount):
@@ -177,70 +173,88 @@ class Bot(commands.Bot):
 					data[chatter]["points"] = 0
 
 				await ctx.send(f"{chatter}, tu as {data[chatter]['points']}♥.")
-
-		with open("data.json", "w", encoding = "utf8") as f:
-			json.dump(data, f, indent = 4)
+		self.save_data(data)
 
 	@commands.command()
 	async def poll(self, ctx: commands.Context, action, *options):
-		match action:
-			case "start":
-				for option in options:
-					self.poll_data[option] = []
-				
-				print(self.poll_data)
-			
-			case "stop":
-				total = 0
-				winners_total = 0
+		chatter = ctx.author.name	
 
-				for option in self.poll_data:
-					for voter in self.poll_data[option]:
-						print(voter)
-						total += int(voter[1])
-						if option == options[0]:
-							winners_total += int(voter[1])
+		if chatter == os.environ["STREAMER_NAME"]:
+			match action:
+				case "start":
+					poll_message = "Veuillez voter pour les choix suivants (avec la commande !vote) :"
 
-				self.poll_data = {}
-				data = self.load_data()
+					for option in options:
+						self.poll_data[option] = []
+						poll_message += f" [{option}]"
 
-				for winner in self.poll_data[options[0]]:
-					profit = round(total * (winner[1] / winners_total))
-					print(profit)
-					data[winner[0]]["points"] += profit
-					data[winner[0]]["total"] += profit
-				
-				self.save_data(data)
+					await ctx.send(poll_message)			
+				case "stop":
+					total = 0
+					winners_total = 0
 
-			case "cancel":
-				self.poll_data = {}
-				data = self.load_data()
+					for option in self.poll_data:
+						for voter in self.poll_data[option]:
+							print(voter)
+							total += int(voter[1])
+							if option == options[0]:
+								winners_total += int(voter[1])
 
-				for option in self.poll_data:
-					for voter in self.poll_data[option]:
-						data[voter[0]]["points"] += voter[1]
+					if total > 0:
+						data = self.load_data()
+						win_message = ""
 
-				self.save_data(data)
-			
-			case _:
-				print("")
+						for winner in self.poll_data[options[0]]:
+							if winner[0] in data.keys():
+								profit = round(total * (int(winner[1]) / winners_total))
+								data[winner[0]]["points"] += profit
+								data[winner[0]]["total"] += profit
+								win_message += f" {winner[0]} gagne {profit}♥,"
+
+						win_message = win_message[:-1] if win_message != "" else "Aucun gagnant."
+						await ctx.send( win_message)
+						self.save_data(data)
+
+					self.poll_data = {}
+				case "cancel":
+					self.poll_data = {}
+					data = self.load_data()
+
+					for option in self.poll_data:
+						for voter in self.poll_data[option]:
+							data[voter[0]]["points"] += voter[1]
+
+					await ctx.send("Sondage annulé, les mises sont rendues.")
+					self.save_data(data)
+				case _:
+					print("Wrong action")
 	
 	@commands.command()
-	async def vote(self, ctx: commands.Context, option, amount):
-		if len(self.poll_data) > 0 and option in self.poll_data and int(amount) > 0:
+	async def vote(self, ctx: commands.Context, choice, amount):
+		if choice in self.poll_data and int(amount) > 0:
 			chatter = ctx.author.name
-			data = self.load_data()
 
-			print("ok")
+			for option in self.poll_data:
+				for voter in self.poll_data[option]:
+					if voter[0] == chatter:
+						return
+
+			data = self.load_data()
 
 			if chatter in data.keys() and data[chatter]["points"] > int(amount):
 				data[chatter]["points"] -= int(amount)
-				print(self.poll_data[option])
-				self.poll_data[option].append([chatter, int(amount)])
-
 				self.save_data(data)
+				self.poll_data[choice].append([chatter, int(amount)])
 
-				print(self.poll_data)
+				status_message = ""
+
+				for option in self.poll_data:
+					total = 0
+					for voter in self.poll_data[option]:
+						total += int(voter[1])
+					status_message += f" [{option}] {total}♥ avec {len(self.poll_data[option])} vote(s),"
+
+				await ctx.send(status_message[:-1])
 
 	@commands.command(aliases = ["g"])
 	async def get(self, ctx: commands.Context):
@@ -257,8 +271,7 @@ class Bot(commands.Bot):
 					message = f"{chatter}, tu as gagné {self.prize}♥."
 
 				await ctx.send(message)
-				self.prize = 0				
- 
+				self.prize = 0
 				self.save_data(data)
 
 	@commands.command()
@@ -276,9 +289,7 @@ class Bot(commands.Bot):
 				data[chatter]["points"] = 0
 
 			await ctx.send(f"{user} a reçu {amount}♥ de la part de {chatter}.")
-
-			with open("data.json", "w", encoding = "utf8") as f:
-				json.dump(data, f, indent = 4)
+			self.save_data(data)
 
 	@commands.command(aliases = ["v"])
 	async def video(self, ctx: commands.Context, name):
@@ -290,7 +301,6 @@ class Bot(commands.Bot):
 
 			if name in self.videos.keys() and chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
-
 				self.save_data(data)
 
 				await self.websocket(f"OBS_KEY_NUM{self.videos[name]}")
@@ -305,7 +315,6 @@ class Bot(commands.Bot):
 
 			if chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
-
 				self.save_data(data)
 
 				await self.websocket("OBS_KEY_NUMPERIOD")
@@ -322,7 +331,6 @@ class Bot(commands.Bot):
 
 			if chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
-
 				self.save_data(data)
 
 				await self.websocket("OBS_KEY_NUMPLUS")
@@ -338,7 +346,6 @@ class Bot(commands.Bot):
 			if chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
 				data[chatter]["badge"] = emoji
-
 				self.save_data(data)
 
 	@commands.command()
@@ -353,9 +360,7 @@ class Bot(commands.Bot):
 				if chatter in data.keys() and data[chatter]["points"] > cost:
 					data[chatter]["points"] -= cost
 					data[chatter]["banner"] = banner
-
-					with open("data.json", "w", encoding = "utf8") as f:
-						json.dump(data, f, indent = 4)
+					self.save_data(data)
 
 	@commands.command()
 	async def remove(self, ctx: commands.Context, type):
@@ -366,7 +371,6 @@ class Bot(commands.Bot):
 
 			if chatter in data.keys() and type in data[chatter].keys():
 				del data[chatter][type]
-
 				self.save_data(data)			
 
 	@routines.routine(seconds = 30, iterations = 1, wait_first = True)
