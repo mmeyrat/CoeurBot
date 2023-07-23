@@ -13,6 +13,7 @@ class Bot(commands.Bot):
 	chatters = None
 	prize = 0
 	is_fast = False
+	poll_data = {}
 	ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"])
 	videos = { "again": 6,
 			   "borgir": 0,
@@ -29,10 +30,17 @@ class Bot(commands.Bot):
 	def __init__(self):
 		super().__init__(token = os.environ["TOKEN"], prefix = "!", initial_channels = [os.environ["STREAMER_NAME"]])
 
+	def load_data(self):
+		with open("data.json", "r", encoding = "utf8") as f:
+			data = json.load(f)
+		return data
+	
+	def save_data(self, data):
+		with open("data.json", "w", encoding = "utf8") as f:
+			json.dump(data, f, indent = 4)
 
 	async def event_ready(self):
 		print(f"Logged in as {self.nick} ({self.user_id})")
-
 
 	async def event_message(self, message):
 		if message.echo:
@@ -42,8 +50,7 @@ class Bot(commands.Bot):
 		chatter = message.author.name
 		
 		if (await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]])) and (chatter != os.environ["STREAMER_NAME"]):			
-			with open("data.json", "r", encoding = "utf8") as f:
-				data = json.load(f)
+			data = self.load_data()
 
 			if chatter not in data.keys():
 				data[chatter] = { "points": 0, "total": 0 }
@@ -64,7 +71,6 @@ class Bot(commands.Bot):
 
 	def set_prize(self, prize):
 		self.prize = prize
-
 	
 	async def websocket(self, keyId):
 		await self.ws.connect()
@@ -76,7 +82,6 @@ class Bot(commands.Bot):
 		await self.ws.call(request)
 		await self.ws.disconnect()
 
-
 	@commands.command()
 	async def love(self, ctx: commands.Context):   
 		chatter = ctx.author.name
@@ -86,19 +91,16 @@ class Bot(commands.Bot):
 			message += "<3 Elove "
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
-			with open("data.json", "r", encoding = "utf8") as f:
-				data = json.load(f)
+			data = self.load_data()
 
 			if chatter in data.keys():
 				data[chatter]["points"] += 1
 				data[chatter]["total"] += 1
 
-				with open("data.json", "w", encoding = "utf8") as f:
-					json.dump(data, f, indent = 4)
+				self.save_data(data)
 
 		await ctx.send(message)
 
-	
 	@commands.command(aliases = ["s"])
 	async def spam(self, ctx: commands.Context, emote):
 		max_emote_quantity = 100
@@ -114,16 +116,13 @@ class Bot(commands.Bot):
 
 		await ctx.send(message)
 
-
 	@commands.command(aliases = ["l"])
 	async def links(self, ctx: commands.Context):
 		await ctx.send(f"Pour rejoindre la communauté Discord : https://discord.gg/qpMzjhua7u, pour me suivre sur TikTok : https://www.tiktok.com/@{os.environ['STREAMER_NAME']} et pour voir les VOD : https://www.youtube.com/@{os.environ['STREAMER_NAME']}.")
 
-
 	@commands.command(aliases = ["e"])
 	async def extension(self, ctx: commands.Context):
 		await ctx.send(f"Téléchargez mon extension Firefox pour profiter des nouvelles emotes et autres cosmétiques : https://addons.mozilla.org/en/firefox/addon/twitch-emotes-extension")
-
 
 	@commands.command(aliases = ["c"])
 	async def clip(self, ctx: commands.Context):
@@ -132,24 +131,18 @@ class Bot(commands.Bot):
 			clip = await partial_user.create_clip(token = os.environ["TOKEN"])
 			await ctx.send(f"Clip crée! Disponible ici : {clip['edit_url'].replace('/edit', '')}")
 
-
 	@commands.command(aliases = ["b"])
 	async def balance(self, ctx: commands.Context):
 		chatter = ctx.author.name
-
-		with open("data.json", "r", encoding = "utf8") as f:
-			data = json.load(f)
+		data = self.load_data()
 
 		if chatter in data.keys():
 			await ctx.send(f"{chatter}, tu as actuellement {data[chatter]['points']}♥ et amassé un total de {data[chatter]['total']}♥.")
 
-
 	@commands.command(aliases = ["r"])
 	async def rank(self, ctx: commands.Context):
 		max_top_size = 10
-
-		with open("data.json", "r", encoding = "utf8") as f:
-			data = json.load(f)
+		data = self.load_data()
 
 		ordered_data = dict(sorted(data.items(), key = lambda item: item[1]["total"], reverse = True)[:max_top_size])
 		top_size = len(ordered_data)
@@ -163,13 +156,10 @@ class Bot(commands.Bot):
 		
 		await ctx.send(top_text)
 	
-
 	@commands.command()
 	async def give(self, ctx: commands.Context, user, amount):
-		chatter = ctx.author.name
-
-		with open("data.json", "r", encoding = "utf8") as f:
-			data = json.load(f)
+		chatter = ctx.author.name	
+		data = self.load_data()
 		
 		if chatter == os.environ["STREAMER_NAME"]:
 			user = user.lower()
@@ -191,14 +181,72 @@ class Bot(commands.Bot):
 		with open("data.json", "w", encoding = "utf8") as f:
 			json.dump(data, f, indent = 4)
 
+	@commands.command()
+	async def poll(self, ctx: commands.Context, action, *options):
+		match action:
+			case "start":
+				for option in options:
+					self.poll_data[option] = []
+				
+				print(self.poll_data)
+			
+			case "stop":
+				total = 0
+				winners_total = 0
+
+				for option in self.poll_data:
+					for voter in self.poll_data[option]:
+						print(voter)
+						total += int(voter[1])
+						if option == options[0]:
+							winners_total += int(voter[1])
+
+				self.poll_data = {}
+				data = self.load_data()
+
+				for winner in self.poll_data[options[0]]:
+					profit = round(total * (winner[1] / winners_total))
+					print(profit)
+					data[winner[0]]["points"] += profit
+					data[winner[0]]["total"] += profit
+				
+				self.save_data(data)
+
+			case "cancel":
+				self.poll_data = {}
+				data = self.load_data()
+
+				for option in self.poll_data:
+					for voter in self.poll_data[option]:
+						data[voter[0]]["points"] += voter[1]
+
+				self.save_data(data)
+			
+			case _:
+				print("")
+	
+	@commands.command()
+	async def vote(self, ctx: commands.Context, option, amount):
+		if len(self.poll_data) > 0 and option in self.poll_data and int(amount) > 0:
+			chatter = ctx.author.name
+			data = self.load_data()
+
+			print("ok")
+
+			if chatter in data.keys() and data[chatter]["points"] > int(amount):
+				data[chatter]["points"] -= int(amount)
+				print(self.poll_data[option])
+				self.poll_data[option].append([chatter, int(amount)])
+
+				self.save_data(data)
+
+				print(self.poll_data)
 
 	@commands.command(aliases = ["g"])
 	async def get(self, ctx: commands.Context):
 		if self.prize != 0:
 			chatter = ctx.author.name
-
-			with open("data.json", "r", encoding = "utf8") as f:
-				data = json.load(f)
+			data = self.load_data()
 
 			if chatter in data.keys():				
 				data[chatter]["points"] += self.prize
@@ -211,9 +259,26 @@ class Bot(commands.Bot):
 				await ctx.send(message)
 				self.prize = 0				
  
-				with open("data.json", "w", encoding = "utf8") as f:
-					json.dump(data, f, indent = 4)
+				self.save_data(data)
 
+	@commands.command()
+	async def send(self, ctx: commands.Context, user, amount):
+		chatter = ctx.author.name		
+		data = self.load_data()
+
+		if chatter in data.keys() and user in data.keys() and amount > 0:
+			data[user]["points"] += int(amount)
+			data[user]["total"] += int(amount)
+
+			data[chatter]["points"] -= int(amount)
+
+			if data[chatter]["points"] < 0:
+				data[chatter]["points"] = 0
+
+			await ctx.send(f"{user} a reçu {amount}♥ de la part de {chatter}.")
+
+			with open("data.json", "w", encoding = "utf8") as f:
+				json.dump(data, f, indent = 4)
 
 	@commands.command(aliases = ["v"])
 	async def video(self, ctx: commands.Context, name):
@@ -221,18 +286,14 @@ class Bot(commands.Bot):
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
 			chatter = ctx.author.name
-
-			with open("data.json", "r", encoding = "utf8") as f:
-				data = json.load(f)
+			data = self.load_data()
 
 			if name in self.videos.keys() and chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
 
-				with open("data.json", "w", encoding = "utf8") as f:
-					json.dump(data, f, indent = 4)
+				self.save_data(data)
 
 				await self.websocket(f"OBS_KEY_NUM{self.videos[name]}")
-
 
 	@commands.command(aliases = ["f"])
 	async def fast(self, ctx: commands.Context):
@@ -240,56 +301,45 @@ class Bot(commands.Bot):
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]) and not self.is_fast:
 			chatter = ctx.author.name
-
-			with open("data.json", "r", encoding = "utf8") as f:
-				data = json.load(f)
+			data = self.load_data()
 
 			if chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
 
-				with open("data.json", "w", encoding = "utf8") as f:
-					json.dump(data, f, indent = 4)
+				self.save_data(data)
 
 				await self.websocket("OBS_KEY_NUMPERIOD")
 				self.is_fast = True
 				self.stop_fast.start()
-
 
 	@commands.command()
 	async def end(self, ctx: commands.Context):
 		cost = 120000
 
 		if await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]):
-			chatter = ctx.author.name
-
-			with open("data.json", "r", encoding = "utf8") as f:
-				data = json.load(f)
+			chatter = ctx.author.name			
+			data = self.load_data()
 
 			if chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
 
-				with open("data.json", "w", encoding = "utf8") as f:
-					json.dump(data, f, indent = 4)
+				self.save_data(data)
 
 				await self.websocket("OBS_KEY_NUMPLUS")
-
 
 	@commands.command()
 	async def badge(self, ctx: commands.Context, emoji):
 		cost = 700
 		chatter = ctx.author.name
 
-		if is_emoji(emoji):
-			with open("data.json", "r", encoding = "utf8") as f:
-				data = json.load(f)
+		if is_emoji(emoji):			
+			data = self.load_data()
 
 			if chatter in data.keys() and data[chatter]["points"] > cost:
 				data[chatter]["points"] -= cost
 				data[chatter]["badge"] = emoji
 
-				with open("data.json", "w", encoding = "utf8") as f:
-					json.dump(data, f, indent = 4)
-
+				self.save_data(data)
 
 	@commands.command()
 	async def banner(self, ctx: commands.Context, banner):
@@ -297,10 +347,8 @@ class Bot(commands.Bot):
 		chatter = ctx.author.name
 
 		for b in os.listdir("../Twitch-REST-API/banners/"):
-			if b.split(".")[0] == banner:
-				
-				with open("data.json", "r", encoding = "utf8") as f:
-					data = json.load(f)
+			if b.split(".")[0] == banner:		
+				data = self.load_data()
 
 				if chatter in data.keys() and data[chatter]["points"] > cost:
 					data[chatter]["points"] -= cost
@@ -309,27 +357,22 @@ class Bot(commands.Bot):
 					with open("data.json", "w", encoding = "utf8") as f:
 						json.dump(data, f, indent = 4)
 
-	
 	@commands.command()
 	async def remove(self, ctx: commands.Context, type):
 		chatter = ctx.author.name
 		
 		if type == "badge" or type == "banner":
-			with open("data.json", "r", encoding = "utf8") as f:
-				data = json.load(f)
+			data = self.load_data()
 
 			if chatter in data.keys() and type in data[chatter].keys():
 				del data[chatter][type]
 
-				with open("data.json", "w", encoding = "utf8") as f:
-					json.dump(data, f, indent = 4)			
-
+				self.save_data(data)			
 
 	@routines.routine(seconds = 30, iterations = 1, wait_first = True)
 	async def stop_fast(self):
 		await self.websocket("OBS_KEY_NUMPERIOD")
 		self.is_fast = False
-
 
 	@routines.routine(seconds = 150, iterations = 1, wait_first = True)
 	async def reminder(self, message):
