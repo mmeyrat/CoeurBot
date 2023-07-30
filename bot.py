@@ -1,5 +1,8 @@
 import os
+import time
 import json
+import random
+import datetime
 import simpleobsws
 from dotenv import load_dotenv
 from emoji import is_emoji
@@ -58,9 +61,7 @@ class Bot(commands.Bot):
 
 			data[chatter]["points"] += 10
 			data[chatter]["total"] += 10
-
-			with open("data.json", "w", encoding = "utf8") as f:
-				json.dump(data, f, indent = 4)
+			self.save_data(data)
 
 		await self.handle_commands(message)
 
@@ -290,6 +291,59 @@ class Bot(commands.Bot):
 
 			await ctx.send(f"{user} a reçu {amount}♥ de la part de {chatter}.")
 			self.save_data(data)
+
+	@commands.command()
+	async def spin(self, ctx: commands.Context):
+		chatter = ctx.author.name		
+		data = self.load_data()
+		now = datetime.datetime.now()
+
+		if "lastSpin" not in data[chatter].keys() or now >= datetime.timedelta(hours=24) + datetime.datetime.strptime(data[chatter]["lastSpin"], '%Y-%m-%d %H:%M:%S'):
+			id = random.randint(0, 9)
+		
+			with open('spin.txt', 'w') as f:
+				f.write(str(id))
+
+			match(id):
+				case 0:
+					if chatter in data.keys():
+						data[chatter]["points"] += 500
+						data[chatter]["total"] += 500
+				case 1:
+					print("")
+				case 2:
+					if chatter in data.keys():
+						data[chatter]["points"] += 50000
+						data[chatter]["total"] += 50000
+				case 3:
+					if chatter in data.keys():
+						data[chatter]["banner"] = "heart"
+				case 4:
+					if chatter in data.keys():
+						data[chatter]["points"] -= 500
+				case 5:
+					if chatter in data.keys():
+						data[chatter]["points"] += 5000
+						data[chatter]["total"] += 5000
+				case 6:
+					self.fast()
+				case 7:
+					self.end()
+				case 8:
+					if chatter in data.keys():
+						data[chatter]["banner"] = "gold"
+				case 9:
+					if chatter in data.keys():
+						data[chatter]["points"] -= 50
+				case _:
+					print("")
+
+			data[chatter]["lastSpin"] = now.strftime("%Y-%m-%d %H:%M:%S")
+
+			self.save_data(data)
+			await self.websocket("OBS_KEY_NUMASTERISK")
+			time.sleep(10)
+			await self.websocket("OBS_KEY_NUMASTERISK")
 
 	@commands.command(aliases = ["v"])
 	async def video(self, ctx: commands.Context, name):
