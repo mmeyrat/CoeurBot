@@ -18,6 +18,7 @@ class Bot(commands.Bot):
 	is_fast = False
 	poll_data = {}
 	ws = simpleobsws.WebSocketClient(url = os.environ["URL"], password = os.environ["PASSWORD"])
+	spin_weights = [20, 10, 4, 15, 5, 10, 10, 1, 5, 20]
 	videos = { "again": 6,
 			   "borgir": 0,
 			   "chika": 9,
@@ -298,11 +299,19 @@ class Bot(commands.Bot):
 		data = self.load_data()
 		now = datetime.datetime.now()
 
-		if "lastSpin" not in data[chatter].keys() or now >= datetime.timedelta(hours=24) + datetime.datetime.strptime(data[chatter]["lastSpin"], '%Y-%m-%d %H:%M:%S'):
-			id = random.randint(0, 9)
-		
+		if (await self.fetch_streams(user_ids = [os.environ["STREAMER_ID"]]) and
+      			("lastSpin" not in data[chatter].keys() or 
+      			now >= datetime.timedelta(hours=12) + datetime.datetime.strptime(data[chatter]["lastSpin"], '%Y-%m-%d %H:%M:%S'))):
+			id = random.choices([i for i in range(0, 10)], weights = self.spin_weights, k = 1)[0]
+
 			with open('spin.txt', 'w') as f:
 				f.write(str(id))
+
+			data[chatter]["lastSpin"] = now.strftime("%Y-%m-%d %H:%M:%S")
+			self.save_data(data)
+			await self.websocket("OBS_KEY_NUMASTERISK")
+			time.sleep(10)
+			await self.websocket("OBS_KEY_NUMASTERISK")
 
 			match(id):
 				case 0:
@@ -310,14 +319,14 @@ class Bot(commands.Bot):
 						data[chatter]["points"] += 500
 						data[chatter]["total"] += 500
 				case 1:
-					print("")
+					await self.websocket(f"OBS_KEY_NUM{random.randint(0, 9)}")
 				case 2:
 					if chatter in data.keys():
 						data[chatter]["points"] += 50000
 						data[chatter]["total"] += 50000
 				case 3:
 					if chatter in data.keys():
-						data[chatter]["banner"] = "heart"
+						data[chatter]["banner"] = "_hearts.jpg"
 				case 4:
 					if chatter in data.keys():
 						data[chatter]["points"] -= 500
@@ -326,24 +335,19 @@ class Bot(commands.Bot):
 						data[chatter]["points"] += 5000
 						data[chatter]["total"] += 5000
 				case 6:
-					self.fast()
+					await self.websocket("OBS_KEY_NUMPERIOD")
+					self.is_fast = True
+					self.stop_fast.start()
 				case 7:
-					self.end()
+					await self.websocket("OBS_KEY_NUMPLUS")
 				case 8:
 					if chatter in data.keys():
-						data[chatter]["banner"] = "gold"
+						data[chatter]["banner"] = "_stars.gif"
 				case 9:
 					if chatter in data.keys():
 						data[chatter]["points"] -= 50
 				case _:
 					print("")
-
-			data[chatter]["lastSpin"] = now.strftime("%Y-%m-%d %H:%M:%S")
-
-			self.save_data(data)
-			await self.websocket("OBS_KEY_NUMASTERISK")
-			time.sleep(10)
-			await self.websocket("OBS_KEY_NUMASTERISK")
 
 	@commands.command(aliases = ["v"])
 	async def video(self, ctx: commands.Context, name):
@@ -408,12 +412,12 @@ class Bot(commands.Bot):
 		chatter = ctx.author.name
 
 		for b in os.listdir("../Twitch-REST-API/banners/"):
-			if b.split(".")[0] == banner:		
+			if not b.startswith("_") and b.split(".")[0] == banner:		
 				data = self.load_data()
 
 				if chatter in data.keys() and data[chatter]["points"] > cost:
 					data[chatter]["points"] -= cost
-					data[chatter]["banner"] = banner
+					data[chatter]["banner"] = b
 					self.save_data(data)
 
 	@commands.command()
